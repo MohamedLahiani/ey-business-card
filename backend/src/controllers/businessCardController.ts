@@ -1,63 +1,109 @@
 import { Request, Response } from 'express';
 import { db } from '../config/db';  // Import DB connection
+import { createBusinessCardSchema, updateBusinessCardSchema } from '../validation/businessCardValidation'; // Import Joi schemas
+import QRCode from 'qrcode';  // Import QR Code library
 
-// Existing GET controller
+
+
+
+
+// Controller to fetch business card data
 export const getBusinessCard = async (req: Request, res: Response) => {
+  const { id } = req.params;  // Get the ID from URL
+
   try {
-    const data = await db.query('SELECT * FROM business_card WHERE id = 1');
-    if (Array.isArray(data[0]) && data[0].length > 0) {
-      res.json(data[0][0]);
-    } else {
-      res.status(404).json({ message: 'Business Card not found' });
+    // Fetch the business card data from the database by ID
+    const [rows]: any = await db.query('SELECT * FROM business_card WHERE id = ?', [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Business Card not found' });
     }
-  } catch (error) {
-    res.status(500).json({ message: 'Internal server error' });
-  }
-};
 
-// New POST controller to create business card
-export const createBusinessCard = async (req: Request, res: Response) => {
-  const { first_name, last_name, email, mobile, company_name, job_title, department, address, city, postal_code } = req.body;
-
-  // Simple validation
-  if (!first_name || !last_name || !email || !mobile || !company_name || !job_title) {
-    return res.status(400).json({ message: 'Missing required fields' });
-  }
-
-  try {
-    // SQL to insert a new business card
-    const [result]: any = await db.query(
-      'INSERT INTO business_card (first_name, last_name, email, mobile, company_name, job_title, department, address, city, postal_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [first_name, last_name, email, mobile, company_name, job_title, department, address, city, postal_code]
-    );
-
-    // Sending back the inserted row
-    res.status(201).json({ id: result.insertId, first_name, last_name, email, mobile, company_name, job_title, department, address, city, postal_code });
+    const businessCard = rows[0]; // Assuming only one result is returned
+    res.json(businessCard);  // Return business card data from the database
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-// New PUT controller to update business card by ID
-export const updateBusinessCard = async (req: Request, res: Response) => {
-  const { id } = req.params;  // Get the ID from URL
-  const { first_name, last_name, email, mobile, company_name, job_title, department, address, city, postal_code } = req.body;
 
-  // Simple validation
-  if (!first_name || !last_name || !email || !mobile || !company_name || !job_title) {
-    return res.status(400).json({ message: 'Missing required fields' });
+
+
+// Controller to create a new business card
+export const createBusinessCard = async (req: Request, res: Response) => {
+  // Validate request body using Joi schema
+  const { error } = createBusinessCardSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
   }
 
+  const { first_name, last_name, email, mobile, job_title, department } = req.body;
+
+  // Inchangeable fields (company_name, address, city, postal_code)
+  const company_name = 'AMC ERNST & YOUNG';  // Fixed
+  const address = 'Avenue Fadhel Ben Achour'; // Fixed
+  const city = 'Tunis';                     // Fixed
+  const postal_code = '1003';               // Fixed
+
   try {
-    // SQL to update the business card with the given ID
     const [result]: any = await db.query(
-      'UPDATE business_card SET first_name = ?, last_name = ?, email = ?, mobile = ?, company_name = ?, job_title = ?, department = ?, address = ?, city = ?, postal_code = ? WHERE id = ?',
-      [first_name, last_name, email, mobile, company_name, job_title, department, address, city, postal_code, id]
+      'INSERT INTO business_card (first_name, last_name, email, mobile, job_title, department, company_name, address, city, postal_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [first_name, last_name, email, mobile, job_title, department, company_name, address, city, postal_code]
     );
 
-    // Check if any row was updated
-    if (result.affectedRows > 0) {
+    res.status(201).json({
+      id: result.insertId,
+      first_name,
+      last_name,
+      email,
+      mobile,
+      job_title,
+      department,
+      company_name,
+      address,
+      city,
+      postal_code
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+
+
+
+
+
+// Controller to update a business card
+export const updateBusinessCard = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  // Validate request body using Joi schema
+  const { error } = updateBusinessCardSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ message: error.details[0].message });
+  }
+
+  const { mobile, job_title, department } = req.body;
+
+  try {
+    const [rows]: any = await db.query('SELECT * FROM business_card WHERE id = ?', [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Business Card not found' });
+    }
+
+    const { first_name, last_name, email, company_name, address, city, postal_code } = rows[0];
+
+    const [updateResult]: any = await db.query(
+      'UPDATE business_card SET mobile = ?, job_title = ?, department = ? WHERE id = ?',
+      [mobile, job_title, department, id]
+    );
+
+    if (updateResult && updateResult.affectedRows > 0) {
       res.json({
         id,
         first_name,
@@ -81,34 +127,114 @@ export const updateBusinessCard = async (req: Request, res: Response) => {
 };
 
 
-// Static user data (mock login)
-const staticUser = {
-  id: 1,
-  first_name: 'John',
-  last_name: 'Doe',
-  email: 'john.doe@ey.com',
-  mobile: '+1234567890',
-  company_name: 'EY',
-  job_title: 'Developer',
-  department: 'IT',
-  address: '123 Main Street',
-  city: 'New York',
-  postal_code: '10001'
+// Controller to generate QR code for a business card (permanent URL strategy)
+export const getBusinessCardQRCodeURL = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    // Check if business card exists
+    const [rows]: any = await db.query('SELECT * FROM business_card WHERE id = ?', [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Business Card not found' });
+    }
+
+    // Permanent URL to download latest vCard
+    const qrURL = `https://ey-business-card.com/api/business-card/${id}/download-vcard`;
+
+    // Generate QR code with this URL
+    const qrCodeDataURL = await QRCode.toDataURL(qrURL);
+
+    // Return QR code as PNG image
+    const img = Buffer.from(qrCodeDataURL.split(",")[1], 'base64');
+    res.writeHead(200, {
+      'Content-Type': 'image/png',
+      'Content-Length': img.length
+    });
+    res.end(img);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
 
-export const loginUser = (req: Request, res: Response) => {
-  // For now, we just return the static user profile
-  res.json({
-    message: 'Login successful',
-    user: staticUser
-  });
+
+
+
+// Controller to serve latest vCard dynamically (for permanent QR code)
+export const downloadBusinessCardVCard = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const [rows]: any = await db.query('SELECT * FROM business_card WHERE id = ?', [id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Business Card not found' });
+    }
+
+    const businessCard = rows[0];
+
+    const vCardData = `
+BEGIN:VCARD
+VERSION:3.0
+N:${businessCard.last_name};${businessCard.first_name};;;
+FN:${businessCard.first_name} ${businessCard.last_name}
+EMAIL:${businessCard.email}
+TEL;TYPE=CELL:${businessCard.mobile.toString()}
+ORG:${businessCard.company_name}
+TITLE:${businessCard.job_title}
+ADR;TYPE=WORK:;;${businessCard.address};${businessCard.city};;${businessCard.postal_code};Tunisia
+END:VCARD
+`.trim();
+
+    // These headers are KEY to make phones show "Import Contact"
+    res.setHeader('Content-Type', 'text/vcard; charset=utf-8');
+    res.setHeader('Content-Disposition', 'inline; filename="business-card.vcf"');
+    res.send(vCardData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
 
 
 
 
+export const getBusinessCardQRCodeVCard = async (req: Request, res: Response) => {
+  const { id } = req.params;
 
+  try {
+    const [rows]: any = await db.query('SELECT * FROM business_card WHERE id = ?', [id]);
 
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Business Card not found' });
+    }
 
+    const businessCard = rows[0];
 
+    const vCardData = `
+BEGIN:VCARD
+VERSION:3.0
+N:${businessCard.last_name};${businessCard.first_name};;;
+FN:${businessCard.first_name} ${businessCard.last_name}
+EMAIL:${businessCard.email}
+TEL;TYPE=CELL:${businessCard.mobile.toString()}
+ORG:${businessCard.company_name}
+TITLE:${businessCard.job_title}
+ADR;TYPE=WORK:;;${businessCard.address};${businessCard.city};;${businessCard.postal_code};Tunisia
+END:VCARD
+`.trim();
 
+    const qrCodeDataURL = await QRCode.toDataURL(vCardData);
+
+    const img = Buffer.from(qrCodeDataURL.split(",")[1], 'base64');
+    res.writeHead(200, {
+      'Content-Type': 'image/png',
+      'Content-Length': img.length
+    });
+    res.end(img);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

@@ -14,11 +14,14 @@
   "license": "ISC",
   "devDependencies": {
     "@types/express": "^5.0.3",
+    "@types/qrcode": "^1.5.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {
     "express": "^5.1.0",
-    "mysql2": "^3.14.1"
+    "joi": "^17.13.3",
+    "mysql2": "^3.14.1",
+    "qrcode": "^1.5.4"
   }
 }
