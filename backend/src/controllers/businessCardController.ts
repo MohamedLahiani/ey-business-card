@@ -73,10 +73,6 @@ export const createBusinessCard = async (req: Request, res: Response) => {
 
 
 
-
-
-
-
 // Controller to update a business card
 export const updateBusinessCard = async (req: Request, res: Response) => {
   const { id } = req.params;

@@ -1,7 +1,8 @@
 // backend/src/routes/businessCardRoutes.ts
 
 import { Router } from 'express';
-import { getBusinessCard, createBusinessCard, updateBusinessCard , getBusinessCardQRCodeURL, downloadBusinessCardVCard, getBusinessCardQRCodeVCard} from '../controllers/businessCardController';
+import { getBusinessCard, createBusinessCard, updateBusinessCard } from '../controllers/businessCardController';
+import {getBusinessCardQRCodeURL, downloadBusinessCardVCard, getBusinessCardQRCodeVCard} from '../controllers/qrController';
 import { getUserBusinessCard } from '../controllers/userController';
 
 
