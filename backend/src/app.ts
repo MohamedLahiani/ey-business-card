@@ -1,20 +1,18 @@
 import express from 'express';
 import businessCardRoutes from './routes/businessCardRoutes';
+import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
 
+// Middleware for parsing JSON requests
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.send('EY Business Card Backend is running!');
-});
-
+// Use the business card routes
 app.use('/api/business-card', businessCardRoutes);
 
-export default app;
+// Use the error handler middleware
+app.use(errorHandler);
 
-
-
-
-// This is the main application file for the EY Business Card Backend.
-// It sets up the Express application, configures middleware, and defines routes.
+app.listen(3000, () => {
+  console.log('Server is running on http://localhost:3000');
+});

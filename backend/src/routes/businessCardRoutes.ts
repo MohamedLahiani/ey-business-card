@@ -1,9 +1,9 @@
-// backend/src/routes/businessCardRoutes.ts
 
 import { Router } from 'express';
 import { getBusinessCard, createBusinessCard, updateBusinessCard } from '../controllers/businessCardController';
 import {getBusinessCardQRCodeURL, downloadBusinessCardVCard, getBusinessCardQRCodeVCard} from '../controllers/qrController';
 import { getUserBusinessCard } from '../controllers/userController';
+const { getBusinessCardQRCode } = require('../controllers/newQrController'); // Import the new QR code controller
 
 
 const router = Router();
@@ -40,6 +40,10 @@ router.get('/:id/download-vcard', (req, res, next) => {
 router.get('/:id/qrcode-vcard', (req, res, next) => {
   getBusinessCardQRCodeVCard(req, res).catch(next);
 }); // direct vCard QR → for screen sharing
+
+
+// Generate QR code for a business card by ID
+router.get('/:id/qrcode', getBusinessCardQRCode);
 
 
 export default router;
