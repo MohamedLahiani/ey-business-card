@@ -1,49 +1,89 @@
-
-import { Router } from 'express';
-import { getBusinessCard, createBusinessCard, updateBusinessCard } from '../controllers/businessCardController';
-import {getBusinessCardQRCodeURL, downloadBusinessCardVCard, getBusinessCardQRCodeVCard} from '../controllers/qrController';
+import { Router, Request, Response, NextFunction } from 'express';
+import {
+  getBusinessCard,
+  createBusinessCard,
+  updateBusinessCard,
+} from '../controllers/businessCardController';
+import {
+  getBusinessCardQRCodeURL,
+  downloadBusinessCardVCard,
+  getBusinessCardQRCodeVCard,
+} from '../controllers/qrController';
 import { getUserBusinessCard } from '../controllers/userController';
-const { getBusinessCardQRCode } = require('../controllers/newQrController'); // Import the new QR code controller
-
+import { emailBusinessCard } from '../controllers/mailerController';
 
 const router = Router();
 
-// GET /api/business-card/:id - Fetch a business card by ID
-router.get('/:id', (req, res, next) => {
-  getBusinessCard(req, res).catch(next);
+// GET business card by ID
+router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await getBusinessCard(req, res);
+  } catch (error) {
+    next(error);
+  }
 });
 
-// POST /api/business-card
-router.post('/', (req, res) => {
-  createBusinessCard(req, res);
+// POST create business card
+router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await createBusinessCard(req, res);
+  } catch (error) {
+    next(error);
+  }
 });
 
-// PUT /api/business-card/:id (update business card by id)
-router.put('/:id', (req, res) => {
-  updateBusinessCard(req, res);
+// PUT update business card
+router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await updateBusinessCard(req, res);
+  } catch (error) {
+    next(error);
+  }
 });
 
+// GET user-specific business card
+router.get('/user/business-card', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await getUserBusinessCard(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
 
+// GET QR Code URL
+router.get('/:id/qrcode', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await getBusinessCardQRCodeURL(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
 
-// GET /api/user/business-card
-router.get('/user/business-card', getUserBusinessCard);
+// GET downloadable vCard
+router.get('/:id/download-vcard', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await downloadBusinessCardVCard(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
 
-router.get('/:id/qrcode', (req, res, next) => {
-  getBusinessCardQRCodeURL(req, res).catch(next);
-}); // this is the line we need for QR code
+// GET QR Code with embedded vCard (for scanning)
+router.get('/:id/qrcode-vcard', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await getBusinessCardQRCodeVCard(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
 
-
-router.get('/:id/download-vcard', (req, res, next) => {
-  downloadBusinessCardVCard(req, res).catch(next);
-}); // returns latest vCard
-
-router.get('/:id/qrcode-vcard', (req, res, next) => {
-  getBusinessCardQRCodeVCard(req, res).catch(next);
-}); // direct vCard QR → for screen sharing
-
-
-// Generate QR code for a business card by ID
-router.get('/:id/qrcode', getBusinessCardQRCode);
-
+// POST send email with vCard + QR
+router.post('/:id/email', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await emailBusinessCard(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;
