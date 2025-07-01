@@ -124,3 +124,26 @@ export const updateBusinessCard = async (req: Request, res: Response) => {
 
 
 // Controller to generate QR code for a business card (permanent URL strategy)
+
+export const getUserBusinessCard = async (req: Request, res: Response) => {
+  const rawParam = req.params.email;
+  const email = decodeURIComponent(req.query.email as string);
+
+  console.log('🔍 Raw param:', rawParam);
+  console.log('✅ Decoded email:', email);
+
+  try {
+    const [rows] = await db.query('SELECT * FROM business_card WHERE email = ?', [email]);
+
+    console.log('🧾 Query result:', rows);
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    return res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ DB ERROR:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};

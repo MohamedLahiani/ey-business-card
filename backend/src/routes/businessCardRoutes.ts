@@ -3,13 +3,14 @@ import {
   getBusinessCard,
   createBusinessCard,
   updateBusinessCard,
+  getUserBusinessCard
 } from '../controllers/businessCardController';
 import {
   getBusinessCardQRCodeURL,
   downloadBusinessCardVCard,
   getBusinessCardQRCodeVCard,
 } from '../controllers/qrController';
-import { getUserBusinessCard } from '../controllers/userController';
+import { login } from '../controllers/authController';
 import { emailBusinessCard } from '../controllers/mailerController';
 
 const router = Router();
@@ -44,7 +45,7 @@ router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
 // GET user-specific business card
 router.get('/user/business-card', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await getUserBusinessCard(req, res);
+    await login(req, res);
   } catch (error) {
     next(error);
   }
@@ -85,5 +86,25 @@ router.post('/:id/email', async (req: Request, res: Response, next: NextFunction
     next(error);
   }
 });
+
+
+router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await login(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+
+router.get('/', async (req, res, next) => {
+  try {
+    await getUserBusinessCard(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 export default router;
