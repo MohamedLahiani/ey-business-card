@@ -36,3 +36,23 @@ export const login = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+
+export const getUserBusinessCard = async (req: Request, res: Response) => {
+  const email = req.query.email as string;
+
+  if (!email) return res.status(400).json({ message: 'Missing email' });
+
+  try {
+    const [rows] = await db.query('SELECT * FROM business_card WHERE email = ?', [email]);
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(404).json({ message: 'Business Card not found' });
+    }
+
+    return res.json(rows[0]);
+  } catch (error) {
+    console.error('FETCH ERROR:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
