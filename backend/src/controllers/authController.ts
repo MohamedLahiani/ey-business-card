@@ -26,9 +26,9 @@ export const login = async (req: Request, res: Response) => {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        first_name: user.first_name, // <-- use first_name
         mobile: user.mobile,
-        company: user.company_name // optional: include more fields
+        company: user.company_name
       }
     });
   } catch (error) {

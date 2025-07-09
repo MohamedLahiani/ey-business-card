@@ -5,6 +5,7 @@ import { db } from '../config/db';
 export const emailBusinessCard = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { to } = req.body;
+  console.log(to);
 
   try {
     const [rows]: any = await db.query('SELECT * FROM business_card WHERE id = ?', [id]);
@@ -22,8 +23,8 @@ export const emailBusinessCard = async (req: Request, res: Response) => {
     });
 
     await transporter.sendMail({
-      from: 'mohamedlahiani1@gmail.com',
-      to : 'adharyoussef2002@gmail.com',
+      from: 'mohamedlahiani11@gmail.com',
+      to : 'mohamed.lahiani@ensi-uma.tn' ,
       subject: 'Your Business Card',
       text: 'Please find your digital business card attached.',
       attachments: [
